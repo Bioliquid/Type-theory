@@ -47,14 +47,15 @@ instance Show Expr where
 	show (Abs n e) = concat ["(\\", n, ".", show e, ")"]
 	show (Var n) = n
 
+parser = sp *> expr
 expr = flip ($) <$> app <*> option id (flip App <$> abst) <|> abst
 abst = Abs <$> (tok "\\" *> ident) <*> (tok "." *> expr)
 app = foldl1 App <$> many1 atom
 atom = braced <|> var
 braced = tok "(" *> expr <* tok ")"
 var = Var <$> ident
-ident = sp *> ((:) <$> lower <*> many (lower <|> digit <|> char '\'')) <* sp
-tok s = sp *> string s *> sp
+ident = (:) <$> lower <*> many (lower <|> digit) <* sp
+tok s = string s *> sp
 sp = many space
 
-main = interact $ verify . parse expr
+main = interact $ verify . parse parser
